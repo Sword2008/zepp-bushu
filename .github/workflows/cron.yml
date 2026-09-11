@@ -12,6 +12,20 @@ jobs:
     timeout-minutes: 3
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     steps:
+      - name: 检查 PAT 配置
+        env:
+          PAT: ${{ secrets.PAT }}
+        run: |
+          echo "────────────────── 配置预检 ──────────────────"
+          if [ -z "$PAT" ]; then
+            echo "❌ 未检测到 PAT Secret！"
+            echo "   Random Cron 需要 PAT 才能随机化定时任务并提交，请按 README 配置"
+            echo "   注意 PAT 需要 Contents 和 Workflows 的 Read and write 权限"
+            exit 1
+          fi
+          echo "   ✅ PAT 已配置（若已过期/权限不足，push 会报 403）"
+          echo "────────────────── 预检结束 ──────────────────"
+
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README

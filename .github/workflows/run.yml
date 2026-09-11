@@ -10,6 +10,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
+      - name: 检查 Secrets 配置
+        env:
+          CONFIG: ${{ secrets.CONFIG }}
+          PAT: ${{ secrets.PAT }}
+        run: |
+          echo "────────────────── 配置预检 ──────────────────"
+          if [ -z "$CONFIG" ]; then
+            echo "❌ 未检测到 CONFIG Secret！"
+            echo "   请在 Settings → Secrets and variables → Actions 添加 CONFIG"
+            echo "   格式为严格 JSON，例如：{\"USER\":\"13800000000\",\"PWD\":\"密码\"}"
+            exit 1
+          fi
+          if ! echo "$CONFIG" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+            echo "❌ CONFIG 不是合法 JSON！"
+            echo "   请检查：字段和值必须用双引号，逗号不能多也不能少"
+            exit 1
+          fi
+          echo "   ✅ CONFIG 已配置且 JSON 格式正确"
+          if [ -z "$PAT" ]; then
+            echo "❌ 未检测到 PAT Secret！"
+            echo "   流程需要 PAT 用于 checkout 和自动提交，请按 README 第一步创建并添加"
+            exit 1
+          fi
+          echo "   ✅ PAT 已配置"
+          echo "   ⚠️ 若 PAT 已过期/权限不足，后面 checkout 或 push 会报 403，需重新生成"
+          echo "────────────────── 预检结束 ──────────────────"
+
       - name: Checkout codes
         uses: actions/checkout@v5
         with:
