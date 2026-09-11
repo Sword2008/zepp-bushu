@@ -37,5 +37,10 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add .
-          git commit -m "persist tokens trigger by ${{ github.event_name }}"
-          git push origin HEAD
+          # 判断 git status 是否有变化，有变动才执行 commit 和 push
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "persist tokens trigger by ${{ github.event_name }}"
+            git push origin HEAD
+          else
+            echo "没有文件变动，跳过持久化提交。"
+          fi
